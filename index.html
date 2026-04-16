@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>웨딩플라워 스케줄</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 로그인 화면 -->
+  <div id="login-screen" class="screen">
+    <div class="login-box">
+      <h1>🌸 웨딩플라워 스케줄</h1>
+      <p class="subtitle">스튜디오 일정 관리</p>
+      <button id="google-login-btn" class="google-btn">
+        <span>Google로 로그인</span>
+      </button>
+      <p id="login-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- 메인 앱 화면 -->
+  <div id="app-screen" class="screen hidden">
+    <header class="top-bar">
+      <h1>🌸 웨딩플라워</h1>
+      <div class="user-info">
+        <span id="user-name"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button id="logout-btn" class="logout-btn">로그아웃</button>
+      </div>
+    </header>
+
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="calendar">📅 달력</button>
+      <button class="tab-btn" data-tab="list">📋 목록</button>
+      <button class="tab-btn admin-only hidden" data-tab="admin">⚙️ 관리</button>
+    </nav>
+
+    <main class="content">
+      <!-- 달력 탭 -->
+      <section id="calendar-tab" class="tab-content">
+        <div class="calendar-header">
+          <button id="prev-month">◀</button>
+          <h2 id="current-month">2026년 4월</h2>
+          <button id="next-month">▶</button>
+          <button id="add-wedding-btn" class="primary-btn admin-only hidden">+ 예식 추가</button>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </section>
+
+      <!-- 목록 탭 -->
+      <section id="list-tab" class="tab-content hidden">
+        <div class="list-filter">
+          <button class="filter-btn active" data-filter="all">전체</button>
+          <button class="filter-btn" data-filter="mine">내 담당</button>
+          <button class="filter-btn" data-filter="upcoming">다가오는</button>
+        </div>
+        <div id="wedding-list" class="wedding-list">
+          <p class="empty-msg">등록된 예식이 없습니다.</p>
+        </div>
+      </section>
+
+      <!-- 관리 탭 (관리자 전용) -->
+      <section id="admin-tab" class="tab-content hidden">
+        <h2>직원 관리</h2>
+        <div id="staff-list" class="staff-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
