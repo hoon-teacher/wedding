@@ -13,9 +13,7 @@
   --border: #e8e6e2;
   --border-strong: #2d2d2d;
   --accent: #1a1a1a;
-  --accent-soft: #2d2d2d;
   --hover: #f5f4f0;
-  --shadow: 0 1px 3px rgba(0,0,0,0.04);
   --font-serif: "Cormorant Garamond", "Noto Serif KR", Georgia, serif;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
 }
@@ -48,7 +46,6 @@ body {
 }
 .brand-yoo {
   font-weight: 500;
-  margin-left: 0.05em;
 }
 .brand-sub {
   font-family: var(--font-sans);
@@ -110,7 +107,6 @@ body {
   color: white;
   border: none;
   font-size: 0.85rem;
-  font-weight: 400;
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: background 0.2s;
@@ -128,7 +124,6 @@ body {
   font-size: 0.8rem;
   margin-top: 1rem;
   min-height: 1rem;
-  letter-spacing: 0;
 }
 
 /* ===== 상단 바 ===== */
@@ -146,9 +141,7 @@ body {
   gap: 1rem;
   font-size: 0.85rem;
 }
-#user-name {
-  color: var(--text-sub);
-}
+#user-name { color: var(--text-sub); }
 .role-badge {
   border: 1px solid var(--border-strong);
   color: var(--text);
@@ -162,14 +155,13 @@ body {
   color: var(--text-sub);
 }
 
-/* 버튼들 */
+/* ===== 버튼 ===== */
 .primary-btn {
   background: var(--text);
   color: white;
   border: none;
   padding: 0.65rem 1.3rem;
   font-size: 0.8rem;
-  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -201,10 +193,7 @@ body {
   letter-spacing: 0.03em;
   transition: all 0.2s;
 }
-.ghost-btn:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-}
+.ghost-btn:hover { color: var(--text); border-color: var(--border-strong); }
 
 .danger-btn {
   background: transparent;
@@ -230,6 +219,20 @@ body {
 }
 .nav-btn:hover { color: var(--text); }
 
+/* 인라인 아이콘 버튼 (이름 편집용) */
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  font-family: var(--font-sans);
+  transition: color 0.15s;
+  line-height: 1;
+}
+.icon-btn:hover { color: var(--text); }
+
 /* ===== 탭 ===== */
 .tab-bar {
   background: var(--bg-card);
@@ -249,16 +252,12 @@ body {
   cursor: pointer;
   font-size: 0.85rem;
   color: var(--text-muted);
-  border-bottom: 1px solid transparent;
   transition: all 0.2s;
   font-family: var(--font-sans);
   letter-spacing: 0.03em;
-  font-weight: 400;
   position: relative;
 }
-.tab-btn.active {
-  color: var(--text);
-}
+.tab-btn.active { color: var(--text); }
 .tab-btn.active::after {
   content: "";
   position: absolute;
@@ -270,21 +269,18 @@ body {
 }
 .tab-btn:hover { color: var(--text); }
 
+/* ===== 컨텐츠 ===== */
 .content {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
-
 .tab-content { animation: fadeIn 0.2s; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
-
-.section-header {
-  margin-bottom: 1.5rem;
-}
+.section-header { margin-bottom: 1.5rem; }
 .section-header h2 {
   font-family: var(--font-serif);
   font-size: 1.8rem;
@@ -292,10 +288,7 @@ body {
   letter-spacing: -0.01em;
   margin-bottom: 0.3rem;
 }
-.section-header p {
-  color: var(--text-sub);
-  font-size: 0.9rem;
-}
+.section-header p { color: var(--text-sub); font-size: 0.9rem; }
 
 /* ===== 달력 ===== */
 .calendar-header {
@@ -309,13 +302,10 @@ body {
   font-size: 2rem;
   font-weight: 500;
   letter-spacing: -0.02em;
-  min-width: 180px;
+  min-width: 240px;
   text-align: center;
-  color: var(--text);
 }
-.calendar-header .primary-btn {
-  margin-left: auto;
-}
+.calendar-header .primary-btn { margin-left: auto; }
 
 .calendar-grid {
   display: grid;
@@ -345,13 +335,9 @@ body {
   transition: background 0.15s;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  position: relative;
 }
 .calendar-day:hover { background: var(--hover); }
-.calendar-day.empty {
-  background: #fcfbf9;
-  cursor: default;
-}
+.calendar-day.empty { background: #fcfbf9; cursor: default; }
 .calendar-day.today .day-number {
   background: var(--text);
   color: white;
@@ -361,15 +347,14 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  font-weight: 500;
 }
 .day-number {
   font-size: 0.85rem;
   color: var(--text-sub);
   font-weight: 400;
-  font-variant-numeric: tabular-nums;
 }
-.calendar-day.sunday .day-number:not(.today) { color: #b94343; }
+.calendar-day.sunday .day-number { color: #b94343; }
+.calendar-day.today .day-number { color: white; }
 
 .wedding-dot {
   background: var(--text);
@@ -381,7 +366,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
-  letter-spacing: 0.02em;
   transition: opacity 0.15s;
 }
 .wedding-dot:hover { opacity: 0.8; }
@@ -412,15 +396,9 @@ body {
   margin-bottom: -1px;
   text-transform: uppercase;
 }
-.filter-btn.active {
-  color: var(--text);
-  border-bottom-color: var(--text);
-}
+.filter-btn.active { color: var(--text); border-bottom-color: var(--text); }
 
-.wedding-list {
-  display: flex;
-  flex-direction: column;
-}
+.wedding-list { display: flex; flex-direction: column; }
 .empty-msg {
   text-align: center;
   color: var(--text-muted);
@@ -439,7 +417,6 @@ body {
 }
 .wedding-card:last-child { border-bottom: 1px solid var(--border); }
 .wedding-card:hover { background: var(--hover); }
-
 .wedding-card-top {
   display: flex;
   justify-content: space-between;
@@ -452,7 +429,6 @@ body {
   font-family: var(--font-serif);
   font-size: 1.3rem;
   font-weight: 500;
-  color: var(--text);
   letter-spacing: -0.01em;
 }
 .wedding-card-date .time {
@@ -462,16 +438,8 @@ body {
   margin-left: 0.5rem;
   font-weight: 400;
 }
-.wedding-card-venue {
-  color: var(--text);
-  margin-bottom: 0.4rem;
-  font-size: 0.95rem;
-}
-.wedding-card-meta {
-  color: var(--text-sub);
-  font-size: 0.82rem;
-  letter-spacing: 0.01em;
-}
+.wedding-card-venue { color: var(--text); margin-bottom: 0.4rem; }
+.wedding-card-meta { color: var(--text-sub); font-size: 0.82rem; }
 .status-chip {
   display: inline-block;
   padding: 0.2rem 0.6rem;
@@ -486,10 +454,7 @@ body {
 .status-chip.pending { background: transparent; color: var(--text-muted); }
 
 /* ===== 직원 관리 ===== */
-.staff-list {
-  display: flex;
-  flex-direction: column;
-}
+.staff-list { display: flex; flex-direction: column; }
 .staff-row {
   display: flex;
   justify-content: space-between;
@@ -502,9 +467,19 @@ body {
   flex-wrap: wrap;
 }
 .staff-row:last-child { border-bottom: 1px solid var(--border); }
-.staff-info { display: flex; flex-direction: column; }
+.staff-info { display: flex; flex-direction: column; gap: 0.2rem; }
+.staff-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
 .staff-name { font-weight: 500; font-size: 0.95rem; }
-.staff-email { color: var(--text-sub); font-size: 0.8rem; margin-top: 0.2rem; }
+.staff-email { color: var(--text-sub); font-size: 0.8rem; }
+.staff-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
 .role-select {
   padding: 0.5rem 0.8rem;
   border: 1px solid var(--border-strong);
@@ -565,12 +540,7 @@ body {
   line-height: 1;
 }
 .modal-close:hover { color: var(--text); }
-
-.modal-body {
-  padding: 2rem;
-  overflow-y: auto;
-  flex: 1;
-}
+.modal-body { padding: 2rem; overflow-y: auto; flex: 1; }
 .modal-footer {
   padding: 1.2rem 2rem;
   border-top: 1px solid var(--border);
@@ -585,16 +555,8 @@ body {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
-.form-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-.form-row {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-}
+.form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.form-row { margin-bottom: 1rem; display: flex; flex-direction: column; }
 .form-row:last-child { margin-bottom: 0; }
 .form-row label {
   font-size: 0.7rem;
@@ -661,12 +623,7 @@ body {
   border-color: var(--text);
 }
 
-.status-toggle {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-top: 0.2rem;
-}
+.status-toggle { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.2rem; }
 .toggle-label {
   font-size: 0.9rem !important;
   cursor: pointer;
@@ -683,12 +640,7 @@ body {
 .toggle-label input { accent-color: var(--text); }
 
 /* 체크리스트 */
-#checklist-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-bottom: 0.6rem;
-}
+#checklist-container { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.6rem; }
 .checklist-item {
   display: flex;
   align-items: center;
@@ -697,10 +649,7 @@ body {
   background: var(--bg);
   border: 1px solid var(--border);
 }
-.checklist-item.checked .checklist-text {
-  text-decoration: line-through;
-  color: var(--text-muted);
-}
+.checklist-item.checked .checklist-text { text-decoration: line-through; color: var(--text-muted); }
 .checklist-text { flex: 1; font-size: 0.9rem; }
 .checklist-item input[type="checkbox"] { accent-color: var(--text); cursor: pointer; }
 .checklist-delete {
@@ -710,13 +659,9 @@ body {
   color: var(--text-muted);
   font-size: 1rem;
   padding: 0.2rem 0.4rem;
-  font-family: var(--font-sans);
 }
 .checklist-delete:hover { color: #b94343; }
-.checklist-add-row {
-  display: flex;
-  gap: 0.5rem;
-}
+.checklist-add-row { display: flex; gap: 0.5rem; }
 .checklist-add-row input {
   flex: 1;
   padding: 0.6rem 0.8rem;
@@ -724,10 +669,7 @@ body {
   font-family: var(--font-sans);
   font-size: 0.9rem;
 }
-.checklist-add-row input:focus {
-  outline: none;
-  border-color: var(--text);
-}
+.checklist-add-row input:focus { outline: none; border-color: var(--text); }
 
 /* ===== 모바일 ===== */
 @media (max-width: 640px) {
@@ -739,11 +681,13 @@ body {
   .content { padding: 1.2rem; }
   .calendar-day { min-height: 70px; padding: 0.4rem; }
   .wedding-dot { font-size: 0.62rem; padding: 0.2rem 0.3rem; }
-  .calendar-header h2 { font-size: 1.5rem; min-width: 120px; }
+  .calendar-header h2 { font-size: 1.5rem; min-width: 160px; }
   .form-row-2col { grid-template-columns: 1fr; gap: 0; }
   .modal-box { width: 95%; max-height: 95vh; }
   .modal-body { padding: 1.5rem; }
   .modal-header, .modal-footer { padding: 1rem 1.5rem; }
   .login-box { padding: 3rem 2rem; min-width: unset; width: 90%; }
   .brand-logo { font-size: 2.5rem; }
+  .staff-row { flex-direction: column; align-items: flex-start; }
+  .staff-actions { width: 100%; justify-content: flex-end; }
 }

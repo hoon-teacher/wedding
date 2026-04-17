@@ -82,7 +82,7 @@
       <section id="admin-tab" class="tab-content hidden">
         <div class="section-header">
           <h2>Team Management</h2>
-          <p>Change member roles between admin and staff.</p>
+          <p>Manage team members and their roles.</p>
         </div>
         <div id="staff-list" class="staff-list"></div>
       </section>
@@ -97,7 +97,6 @@
         <h2 id="modal-title">New Event</h2>
         <button class="modal-close" id="modal-close-btn">×</button>
       </div>
-
       <div class="modal-body">
         <div class="form-section">
           <div class="form-row">
@@ -119,7 +118,6 @@
             <input type="text" id="w-venue" placeholder="예: 더케이호텔 그랜드볼룸" />
           </div>
         </div>
-
         <div class="form-section">
           <div class="form-row">
             <label>Concept</label>
@@ -130,14 +128,12 @@
             <textarea id="w-decoration" rows="2" placeholder="메인 아치, 버진로드, 웰컴테이블, 포토존..."></textarea>
           </div>
         </div>
-
         <div class="form-section">
           <div class="form-row">
             <label>Assigned Team</label>
             <div id="w-staff-checkboxes" class="checkbox-group"></div>
           </div>
         </div>
-
         <div class="form-section">
           <div class="form-row-2col">
             <div class="form-row">
@@ -147,26 +143,18 @@
             <div class="form-row">
               <label>Status</label>
               <div class="status-toggle">
-                <label class="toggle-label">
-                  <input type="checkbox" id="w-paid" />
-                  <span>입금 완료</span>
-                </label>
-                <label class="toggle-label">
-                  <input type="checkbox" id="w-settled" />
-                  <span>정산 완료</span>
-                </label>
+                <label class="toggle-label"><input type="checkbox" id="w-paid" /><span>입금 완료</span></label>
+                <label class="toggle-label"><input type="checkbox" id="w-settled" /><span>정산 완료</span></label>
               </div>
             </div>
           </div>
         </div>
-
         <div class="form-section">
           <div class="form-row">
             <label>Notes</label>
             <textarea id="w-memo" rows="2" placeholder="특이사항, 요청사항..."></textarea>
           </div>
         </div>
-
         <div class="form-section">
           <div class="form-row">
             <label>Checklist</label>
@@ -178,12 +166,38 @@
           </div>
         </div>
       </div>
-
       <div class="modal-footer">
         <button id="delete-wedding-btn" class="danger-btn hidden">Delete</button>
         <div style="flex:1"></div>
         <button id="cancel-btn" class="ghost-btn">Cancel</button>
         <button id="save-wedding-btn" class="primary-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이름 편집 모달 -->
+  <div id="name-modal" class="modal hidden">
+    <div class="modal-backdrop" id="name-modal-backdrop"></div>
+    <div class="modal-box" style="max-width:400px;">
+      <div class="modal-header">
+        <h2>Edit Name</h2>
+        <button class="modal-close" id="name-modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section" style="border:none;margin:0;padding:0;">
+          <div class="form-row">
+            <label>Display Name</label>
+            <input type="text" id="edit-name-input" placeholder="이름 입력" />
+          </div>
+          <p style="color:#a0a0a0;font-size:0.8rem;margin-top:0.5rem;">
+            담당자 표시, 일정 목록 등에 사용됩니다.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div style="flex:1"></div>
+        <button id="name-cancel-btn" class="ghost-btn">Cancel</button>
+        <button id="name-save-btn" class="primary-btn">Save</button>
       </div>
     </div>
   </div>
