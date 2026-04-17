@@ -43,9 +43,11 @@ body {
 .brand-im {
   font-style: italic;
   font-weight: 400;
+  letter-spacing: 0;
 }
 .brand-yoo {
   font-weight: 500;
+  letter-spacing: 0;
 }
 .brand-sub {
   font-family: var(--font-sans);
