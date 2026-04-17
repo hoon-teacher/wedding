@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="imyoo" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
 </head>
 <body>
   <!-- 로그인 화면 -->
@@ -134,18 +141,32 @@
             <div id="w-staff-checkboxes" class="checkbox-group"></div>
           </div>
         </div>
-        <div class="form-section">
-          <div class="form-row-2col">
-            <div class="form-row">
-              <label>Price (KRW)</label>
-              <input type="number" id="w-price" placeholder="2,500,000" />
+        <div class="form-section admin-only-section">
+          <div class="form-row">
+            <label>총 견적 금액 (KRW)</label>
+            <input type="number" id="w-price" placeholder="예: 3,200,000" />
+          </div>
+          <div class="payment-stages">
+            <div class="payment-row">
+              <label class="toggle-label">
+                <input type="checkbox" id="w-deposit" />
+                <span class="payment-label">계약금 입금</span>
+              </label>
+              <input type="number" id="w-deposit-amount" class="payment-amount" placeholder="금액" />
             </div>
-            <div class="form-row">
-              <label>Status</label>
-              <div class="status-toggle">
-                <label class="toggle-label"><input type="checkbox" id="w-paid" /><span>입금 완료</span></label>
-                <label class="toggle-label"><input type="checkbox" id="w-settled" /><span>정산 완료</span></label>
-              </div>
+            <div class="payment-row">
+              <label class="toggle-label">
+                <input type="checkbox" id="w-middle" />
+                <span class="payment-label">중도금 입금</span>
+              </label>
+              <input type="number" id="w-middle-amount" class="payment-amount" placeholder="금액" />
+            </div>
+            <div class="payment-row">
+              <label class="toggle-label">
+                <input type="checkbox" id="w-settled" />
+                <span class="payment-label">정산 완료</span>
+              </label>
+              <input type="number" id="w-settled-amount" class="payment-amount" placeholder="금액" />
             </div>
           </div>
         </div>
@@ -203,5 +224,10 @@
   </div>
 
   <script type="module" src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/wedding/sw.js');
+    }
+  </script>
 </body>
 </html>
