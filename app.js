@@ -1,24 +1,13 @@
-// Firebase SDK imports
+// Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  onSnapshot,
-  query,
-  orderBy
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc,
+  collection, onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Firebase 설정
 const firebaseConfig = {
   apiKey: "AIzaSyDjpXgNZuiaq4DDUy5VPpPoc7VIm1QT_60",
   authDomain: "imyoo-studio.firebaseapp.com",
@@ -35,43 +24,40 @@ const provider = new GoogleAuthProvider();
 
 // ===== 전역 상태 =====
 let currentUser = null;
-let currentUserRole = "staff"; // 'admin' or 'staff'
+let currentUserRole = "staff";
 let currentDate = new Date();
-let weddings = []; // Firestore에서 받아올 예식 목록
+let weddings = [];
+let allUsers = [];
+let currentFilter = "upcoming";
+let editingWeddingId = null;
+let editingChecklist = [];
 
-// ===== DOM 요소 =====
+// ===== DOM =====
 const loginScreen = document.getElementById("login-screen");
 const appScreen = document.getElementById("app-screen");
-const googleLoginBtn = document.getElementById("google-login-btn");
-const logoutBtn = document.getElementById("logout-btn");
-const loginError = document.getElementById("login-error");
-const userNameEl = document.getElementById("user-name");
-const userRoleEl = document.getElementById("user-role");
+const modal = document.getElementById("wedding-modal");
 
-// ===== 로그인 처리 =====
-googleLoginBtn.addEventListener("click", async () => {
+// ===== 로그인/로그아웃 =====
+document.getElementById("google-login-btn").addEventListener("click", async () => {
   try {
-    loginError.textContent = "";
+    document.getElementById("login-error").textContent = "";
     await signInWithPopup(auth, provider);
   } catch (err) {
     console.error(err);
-    loginError.textContent = "로그인 실패: " + err.message;
+    document.getElementById("login-error").textContent = "Login failed: " + err.message;
   }
 });
+document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
 
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-});
-
-// 인증 상태 감지
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
-    await ensureUserDoc(user); // Firestore에 사용자 정보 저장
+    await ensureUserDoc(user);
     await loadUserRole(user.uid);
     showApp();
     initCalendar();
     subscribeWeddings();
+    subscribeUsers();
   } else {
     currentUser = null;
     currentUserRole = "staff";
@@ -79,13 +65,10 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// 사용자 문서가 없으면 생성 (처음 로그인 시)
 async function ensureUserDoc(user) {
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
   if (!snap.exists()) {
-    // 첫 로그인 사용자는 기본적으로 staff
-    // 관리자(처제)는 콘솔에서 수동으로 role을 'admin'으로 바꿔줘야 함
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email,
@@ -99,9 +82,7 @@ async function ensureUserDoc(user) {
 
 async function loadUserRole(uid) {
   const snap = await getDoc(doc(db, "users", uid));
-  if (snap.exists()) {
-    currentUserRole = snap.data().role || "staff";
-  }
+  if (snap.exists()) currentUserRole = snap.data().role || "staff";
 }
 
 // ===== 화면 전환 =====
@@ -109,15 +90,13 @@ function showLogin() {
   loginScreen.classList.remove("hidden");
   appScreen.classList.add("hidden");
 }
-
 function showApp() {
   loginScreen.classList.add("hidden");
   appScreen.classList.remove("hidden");
-  userNameEl.textContent = currentUser.displayName || currentUser.email;
-  userRoleEl.textContent = currentUserRole === "admin" ? "관리자" : "직원";
-  userRoleEl.classList.toggle("staff", currentUserRole === "staff");
-
-  // 관리자 전용 UI 표시
+  document.getElementById("user-name").textContent = currentUser.displayName || currentUser.email;
+  const roleEl = document.getElementById("user-role");
+  roleEl.textContent = currentUserRole === "admin" ? "Admin" : "Staff";
+  roleEl.classList.toggle("staff", currentUserRole === "staff");
   document.querySelectorAll(".admin-only").forEach((el) => {
     el.classList.toggle("hidden", currentUserRole !== "admin");
   });
@@ -131,6 +110,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.classList.add("active");
     document.querySelectorAll(".tab-content").forEach((c) => c.classList.add("hidden"));
     document.getElementById(`${tab}-tab`).classList.remove("hidden");
+    if (tab === "admin") renderStaffList();
   });
 });
 
@@ -144,79 +124,80 @@ function initCalendar() {
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar();
   });
+  document.getElementById("add-wedding-btn").addEventListener("click", () => {
+    openWeddingModal(null);
+  });
   renderCalendar();
 }
 
 function renderCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  document.getElementById("current-month").textContent = `${year}년 ${month + 1}월`;
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December"];
+  document.getElementById("current-month").textContent = `${monthNames[month]} ${year}`;
 
   const grid = document.getElementById("calendar-grid");
   grid.innerHTML = "";
 
-  // 요일 헤더
-  ["일", "월", "화", "수", "목", "금", "토"].forEach((d) => {
+  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((d) => {
     const h = document.createElement("div");
     h.className = "calendar-day-header";
     h.textContent = d;
     grid.appendChild(h);
   });
 
-  // 해당 월의 첫 날, 마지막 날
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const startDayOfWeek = firstDay.getDay();
   const today = new Date();
 
-  // 빈 칸 (첫 날 앞부분)
   for (let i = 0; i < startDayOfWeek; i++) {
     const empty = document.createElement("div");
     empty.className = "calendar-day empty";
     grid.appendChild(empty);
   }
 
-  // 날짜 칸
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const cell = document.createElement("div");
     cell.className = "calendar-day";
 
-    const isToday =
-      today.getFullYear() === year &&
-      today.getMonth() === month &&
-      today.getDate() === day;
+    const dayOfWeek = new Date(year, month, day).getDay();
+    if (dayOfWeek === 0) cell.classList.add("sunday");
+
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
     if (isToday) cell.classList.add("today");
 
     const dayNumber = document.createElement("div");
     dayNumber.className = "day-number";
+    if (isToday) dayNumber.classList.add("today");
     dayNumber.textContent = day;
     cell.appendChild(dayNumber);
 
-    // 해당 날짜의 예식 표시
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const dayWeddings = weddings.filter((w) => w.date === dateStr);
     dayWeddings.forEach((w) => {
       const dot = document.createElement("div");
       dot.className = "wedding-dot";
-      dot.textContent = `${w.time || ""} ${w.venue || ""}`.trim();
+      if (w.assignedStaff?.includes(currentUser.uid)) dot.classList.add("mine");
+      dot.textContent = `${w.time || ""} ${w.venue || "(venue)"}`.trim();
+      dot.title = w.couple || w.venue || "";
       dot.addEventListener("click", (e) => {
         e.stopPropagation();
-        alert(`예식 상세 (추후 구현): ${w.venue}`);
+        openWeddingModal(w.id);
       });
       cell.appendChild(dot);
     });
 
     cell.addEventListener("click", () => {
-      if (currentUserRole === "admin") {
-        alert(`${dateStr}에 예식 추가 (추후 구현)`);
-      }
+      if (currentUserRole === "admin") openWeddingModal(null, dateStr);
     });
 
     grid.appendChild(cell);
   }
 }
 
-// ===== Firestore 실시간 구독 =====
+// ===== Firestore 구독 =====
 function subscribeWeddings() {
   const q = query(collection(db, "weddings"), orderBy("date", "asc"));
   onSnapshot(q, (snapshot) => {
@@ -226,21 +207,289 @@ function subscribeWeddings() {
   });
 }
 
-// ===== 목록 렌더링 =====
+function subscribeUsers() {
+  onSnapshot(collection(db, "users"), (snapshot) => {
+    allUsers = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (!document.getElementById("admin-tab").classList.contains("hidden")) {
+      renderStaffList();
+    }
+  });
+}
+
+// ===== 목록 =====
+document.querySelectorAll(".filter-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    renderList();
+  });
+});
+
 function renderList() {
   const listEl = document.getElementById("wedding-list");
-  if (weddings.length === 0) {
-    listEl.innerHTML = '<p class="empty-msg">등록된 예식이 없습니다.</p>';
+  let list = [...weddings];
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  if (currentFilter === "mine") {
+    list = list.filter((w) => w.assignedStaff?.includes(currentUser.uid));
+  } else if (currentFilter === "upcoming") {
+    list = list.filter((w) => w.date >= todayStr);
+  }
+
+  if (list.length === 0) {
+    listEl.innerHTML = '<p class="empty-msg">No events to display.</p>';
     return;
   }
-  listEl.innerHTML = weddings
-    .map(
-      (w) => `
-    <div class="wedding-card" style="background:white;padding:1rem;border-radius:10px;border:1px solid #eee;">
-      <strong>${w.date} ${w.time || ""}</strong><br/>
-      <span style="color:#666;">${w.venue || "장소 미정"} · ${w.concept || "컨셉 미정"}</span>
+
+  listEl.innerHTML = list.map((w) => {
+    const staffNames = (w.assignedStaff || [])
+      .map((uid) => allUsers.find((u) => u.uid === uid)?.name || "")
+      .filter(Boolean).join(", ");
+    const priceStr = w.price ? `₩${Number(w.price).toLocaleString()}` : "";
+    const paidChip = w.paid 
+      ? '<span class="status-chip paid">Paid</span>' 
+      : '<span class="status-chip pending">Unpaid</span>';
+    const settledChip = w.settled ? '<span class="status-chip settled">Settled</span>' : '';
+    return `
+      <div class="wedding-card" data-id="${w.id}">
+        <div class="wedding-card-top">
+          <div class="wedding-card-date">${formatDate(w.date)}<span class="time">${w.time || ""}</span></div>
+          <div>${paidChip}${settledChip}</div>
+        </div>
+        <div class="wedding-card-venue">${w.venue || "(장소 미정)"} ${w.couple ? "· " + w.couple : ""}</div>
+        <div class="wedding-card-meta">
+          ${w.concept ? w.concept + " · " : ""}
+          ${staffNames ? staffNames : "담당자 미배정"}
+          ${priceStr ? " · " + priceStr : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  listEl.querySelectorAll(".wedding-card").forEach((card) => {
+    card.addEventListener("click", () => openWeddingModal(card.dataset.id));
+  });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-");
+  return `${y}. ${m}. ${d}`;
+}
+
+// ===== 예식 모달 =====
+function openWeddingModal(weddingId, defaultDate = null) {
+  editingWeddingId = weddingId;
+  editingChecklist = [];
+  const titleEl = document.getElementById("modal-title");
+  const deleteBtn = document.getElementById("delete-wedding-btn");
+
+  renderStaffCheckboxes();
+
+  if (weddingId) {
+    const w = weddings.find((x) => x.id === weddingId);
+    if (!w) return;
+    titleEl.textContent = currentUserRole === "admin" ? "Edit Event" : "Event Details";
+    document.getElementById("w-date").value = w.date || "";
+    document.getElementById("w-time").value = w.time || "";
+    document.getElementById("w-couple").value = w.couple || "";
+    document.getElementById("w-venue").value = w.venue || "";
+    document.getElementById("w-concept").value = w.concept || "";
+    document.getElementById("w-decoration").value = w.decoration || "";
+    document.getElementById("w-price").value = w.price || "";
+    document.getElementById("w-paid").checked = !!w.paid;
+    document.getElementById("w-settled").checked = !!w.settled;
+    document.getElementById("w-memo").value = w.memo || "";
+    document.querySelectorAll(".staff-checkbox").forEach((cb) => {
+      cb.checked = (w.assignedStaff || []).includes(cb.value);
+    });
+    editingChecklist = [...(w.checklist || [])];
+    deleteBtn.classList.toggle("hidden", currentUserRole !== "admin");
+  } else {
+    titleEl.textContent = "New Event";
+    document.getElementById("w-date").value = defaultDate || "";
+    document.getElementById("w-time").value = "";
+    document.getElementById("w-couple").value = "";
+    document.getElementById("w-venue").value = "";
+    document.getElementById("w-concept").value = "";
+    document.getElementById("w-decoration").value = "";
+    document.getElementById("w-price").value = "";
+    document.getElementById("w-paid").checked = false;
+    document.getElementById("w-settled").checked = false;
+    document.getElementById("w-memo").value = "";
+    document.querySelectorAll(".staff-checkbox").forEach((cb) => (cb.checked = false));
+    editingChecklist = [];
+    deleteBtn.classList.add("hidden");
+  }
+  renderChecklist();
+
+  const isReadOnly = currentUserRole !== "admin";
+  document.getElementById("save-wedding-btn").classList.toggle("hidden", isReadOnly);
+  document.querySelectorAll("#wedding-modal input, #wedding-modal textarea").forEach((el) => {
+    if (el.id === "new-checklist-item") { el.disabled = false; return; }
+    el.disabled = isReadOnly;
+  });
+  document.getElementById("add-checklist-btn").style.display = isReadOnly ? "none" : "";
+
+  modal.classList.remove("hidden");
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+  editingWeddingId = null;
+  editingChecklist = [];
+}
+
+document.getElementById("modal-close-btn").addEventListener("click", closeModal);
+document.getElementById("cancel-btn").addEventListener("click", closeModal);
+document.querySelector(".modal-backdrop").addEventListener("click", closeModal);
+
+function renderStaffCheckboxes() {
+  const container = document.getElementById("w-staff-checkboxes");
+  if (allUsers.length === 0) {
+    container.innerHTML = '<span style="color:#a0a0a0;font-size:0.85rem;">No team members registered</span>';
+    return;
+  }
+  container.innerHTML = allUsers.map((u) => `
+    <label>
+      <input type="checkbox" class="staff-checkbox" value="${u.uid}" />
+      ${u.name}
+    </label>
+  `).join("");
+}
+
+function renderChecklist() {
+  const container = document.getElementById("checklist-container");
+  if (editingChecklist.length === 0) {
+    container.innerHTML = '<p style="color:#a0a0a0;font-size:0.85rem;padding:0.3rem 0;font-style:italic;">No items yet.</p>';
+    return;
+  }
+  container.innerHTML = editingChecklist.map((item, idx) => `
+    <div class="checklist-item ${item.done ? "checked" : ""}">
+      <input type="checkbox" data-idx="${idx}" class="checklist-toggle" ${item.done ? "checked" : ""} />
+      <span class="checklist-text">${item.text}</span>
+      ${currentUserRole === "admin" ? `<button class="checklist-delete" data-idx="${idx}" type="button">×</button>` : ""}
     </div>
-  `
-    )
-    .join("");
+  `).join("");
+
+  container.querySelectorAll(".checklist-toggle").forEach((cb) => {
+    cb.addEventListener("change", (e) => {
+      const idx = Number(e.target.dataset.idx);
+      editingChecklist[idx].done = e.target.checked;
+      renderChecklist();
+    });
+  });
+  container.querySelectorAll(".checklist-delete").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const idx = Number(e.target.dataset.idx);
+      editingChecklist.splice(idx, 1);
+      renderChecklist();
+    });
+  });
+}
+
+document.getElementById("add-checklist-btn").addEventListener("click", addChecklistItem);
+document.getElementById("new-checklist-item").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    addChecklistItem();
+  }
+});
+function addChecklistItem() {
+  const input = document.getElementById("new-checklist-item");
+  const text = input.value.trim();
+  if (!text) return;
+  editingChecklist.push({ text, done: false });
+  input.value = "";
+  renderChecklist();
+}
+
+// 저장
+document.getElementById("save-wedding-btn").addEventListener("click", async () => {
+  const date = document.getElementById("w-date").value;
+  const venue = document.getElementById("w-venue").value.trim();
+  if (!date || !venue) {
+    alert("Date and venue are required.");
+    return;
+  }
+  const assignedStaff = Array.from(document.querySelectorAll(".staff-checkbox:checked")).map((cb) => cb.value);
+  const data = {
+    date,
+    time: document.getElementById("w-time").value,
+    couple: document.getElementById("w-couple").value.trim(),
+    venue,
+    concept: document.getElementById("w-concept").value.trim(),
+    decoration: document.getElementById("w-decoration").value.trim(),
+    price: Number(document.getElementById("w-price").value) || 0,
+    paid: document.getElementById("w-paid").checked,
+    settled: document.getElementById("w-settled").checked,
+    memo: document.getElementById("w-memo").value.trim(),
+    assignedStaff,
+    checklist: editingChecklist,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    if (editingWeddingId) {
+      await updateDoc(doc(db, "weddings", editingWeddingId), data);
+    } else {
+      data.createdAt = new Date().toISOString();
+      await addDoc(collection(db, "weddings"), data);
+    }
+    closeModal();
+  } catch (err) {
+    console.error(err);
+    alert("Save failed: " + err.message);
+  }
+});
+
+// 삭제
+document.getElementById("delete-wedding-btn").addEventListener("click", async () => {
+  if (!editingWeddingId) return;
+  if (!confirm("이 이벤트를 삭제하시겠습니까?")) return;
+  try {
+    await deleteDoc(doc(db, "weddings", editingWeddingId));
+    closeModal();
+  } catch (err) {
+    alert("Delete failed: " + err.message);
+  }
+});
+
+// ===== 직원 관리 =====
+function renderStaffList() {
+  const el = document.getElementById("staff-list");
+  if (allUsers.length === 0) {
+    el.innerHTML = '<p class="empty-msg">No members yet.</p>';
+    return;
+  }
+  el.innerHTML = allUsers.map((u) => `
+    <div class="staff-row">
+      <div class="staff-info">
+        <div class="staff-name">${u.name} ${u.uid === currentUser.uid ? "(you)" : ""}</div>
+        <div class="staff-email">${u.email}</div>
+      </div>
+      <select class="role-select" data-uid="${u.uid}" ${u.uid === currentUser.uid ? "disabled" : ""}>
+        <option value="staff" ${u.role === "staff" ? "selected" : ""}>Staff</option>
+        <option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>
+      </select>
+    </div>
+  `).join("");
+
+  el.querySelectorAll(".role-select").forEach((sel) => {
+    sel.addEventListener("change", async (e) => {
+      const uid = e.target.dataset.uid;
+      const newRole = e.target.value;
+      if (!confirm(`Change this member's role to '${newRole}'?`)) {
+        const u = allUsers.find((x) => x.uid === uid);
+        e.target.value = u.role;
+        return;
+      }
+      try {
+        await updateDoc(doc(db, "users", uid), { role: newRole });
+      } catch (err) {
+        alert("Update failed: " + err.message);
+      }
+    });
+  });
 }
