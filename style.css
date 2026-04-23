@@ -642,6 +642,44 @@ body {
 }
 .toggle-label input { accent-color: var(--text); }
 
+/* 정산 3단계 */
+.payment-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+}
+.payment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+.payment-row:last-child { border-bottom: none; }
+.payment-row.done {
+  background: var(--hover);
+}
+.payment-row.done .payment-label {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.payment-label { font-size: 0.9rem; min-width: 90px; }
+.payment-amount {
+  width: 130px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  background: white;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text);
+  text-align: right;
+}
+.payment-amount:focus { outline: none; border-color: var(--text); }
+.payment-amount:disabled { background: var(--hover); color: var(--text-sub); }
+
 /* 체크리스트 */
 #checklist-container { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.6rem; }
 .checklist-item {
