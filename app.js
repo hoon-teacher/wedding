@@ -14,7 +14,7 @@ const firebaseConfig = {
   projectId: "imyoo-studio",
   storageBucket: "imyoo-studio.firebasestorage.app",
   messagingSenderId: "281378286031",
-  appId: "1:281378286341:web:f00e2ab0b8be1e19c70aba"
+  appId: "1:281378286031:web:f00e2ab0b8be1e19c70aba"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -244,7 +244,7 @@ function renderList() {
     const staffNames = (w.assignedStaff||[])
       .map(uid => allUsers.find(u => u.uid === uid)?.name || "")
       .filter(Boolean).join(", ");
-    const priceStr = w.price ? `₩${Number(w.price).toLocaleString()}` : "";
+    const priceStr = currentUserRole === "admin" && w.price ? `₩${Number(w.price).toLocaleString()}` : "";
     const paidChip = w.paid
       ? '<span class="status-chip paid">Paid</span>'
       : '<span class="status-chip pending">Unpaid</span>';
@@ -295,8 +295,12 @@ function openWeddingModal(weddingId, defaultDate = null) {
     document.getElementById("w-concept").value = w.concept || "";
     document.getElementById("w-decoration").value = w.decoration || "";
     document.getElementById("w-price").value = w.price || "";
-    document.getElementById("w-paid").checked = !!w.paid;
+    document.getElementById("w-deposit").checked = !!w.deposit;
+    document.getElementById("w-deposit-amount").value = w.depositAmount || "";
+    document.getElementById("w-middle").checked = !!w.middle;
+    document.getElementById("w-middle-amount").value = w.middleAmount || "";
     document.getElementById("w-settled").checked = !!w.settled;
+    document.getElementById("w-settled-amount").value = w.settledAmount || "";
     document.getElementById("w-memo").value = w.memo || "";
     document.querySelectorAll(".staff-checkbox").forEach(cb => {
       cb.checked = (w.assignedStaff||[]).includes(cb.value);
@@ -312,8 +316,12 @@ function openWeddingModal(weddingId, defaultDate = null) {
     document.getElementById("w-concept").value = "";
     document.getElementById("w-decoration").value = "";
     document.getElementById("w-price").value = "";
-    document.getElementById("w-paid").checked = false;
+    document.getElementById("w-deposit").checked = false;
+    document.getElementById("w-deposit-amount").value = "";
+    document.getElementById("w-middle").checked = false;
+    document.getElementById("w-middle-amount").value = "";
     document.getElementById("w-settled").checked = false;
+    document.getElementById("w-settled-amount").value = "";
     document.getElementById("w-memo").value = "";
     document.querySelectorAll(".staff-checkbox").forEach(cb => cb.checked = false);
     editingChecklist = [];
@@ -323,11 +331,17 @@ function openWeddingModal(weddingId, defaultDate = null) {
 
   const isReadOnly = currentUserRole !== "admin";
   document.getElementById("save-wedding-btn").classList.toggle("hidden", isReadOnly);
+  // 금액 섹션 staff에게 숨김
+  document.querySelectorAll(".admin-only-section").forEach(el => {
+    el.style.display = isReadOnly ? "none" : "";
+  });
   document.querySelectorAll("#wedding-modal input, #wedding-modal textarea").forEach(el => {
     if (el.id === "new-checklist-item") { el.disabled = false; return; }
     el.disabled = isReadOnly;
   });
   document.getElementById("add-checklist-btn").style.display = isReadOnly ? "none" : "";
+  // 정산 행 done 스타일
+  updatePaymentRowStyles();
 
   modal.classList.remove("hidden");
 }
@@ -337,6 +351,21 @@ function closeModal() {
   editingWeddingId = null;
   editingChecklist = [];
 }
+
+// 정산 행 done 스타일 업데이트
+function updatePaymentRowStyles() {
+  ["w-deposit","w-middle","w-settled"].forEach(id => {
+    const checkbox = document.getElementById(id);
+    if (!checkbox) return;
+    const row = checkbox.closest(".payment-row");
+    if (row) row.classList.toggle("done", checkbox.checked);
+  });
+}
+
+// 체크 시 즉시 반영
+["w-deposit","w-middle","w-settled"].forEach(id => {
+  document.getElementById(id)?.addEventListener("change", updatePaymentRowStyles);
+});
 
 document.getElementById("modal-close-btn").addEventListener("click", closeModal);
 document.getElementById("cancel-btn").addEventListener("click", closeModal);
@@ -409,8 +438,12 @@ document.getElementById("save-wedding-btn").addEventListener("click", async () =
     venue, concept: document.getElementById("w-concept").value.trim(),
     decoration: document.getElementById("w-decoration").value.trim(),
     price: Number(document.getElementById("w-price").value) || 0,
-    paid: document.getElementById("w-paid").checked,
+    deposit: document.getElementById("w-deposit").checked,
+    depositAmount: Number(document.getElementById("w-deposit-amount").value) || 0,
+    middle: document.getElementById("w-middle").checked,
+    middleAmount: Number(document.getElementById("w-middle-amount").value) || 0,
     settled: document.getElementById("w-settled").checked,
+    settledAmount: Number(document.getElementById("w-settled-amount").value) || 0,
     memo: document.getElementById("w-memo").value.trim(),
     assignedStaff, checklist: editingChecklist,
     updatedAt: new Date().toISOString()
