@@ -495,6 +495,7 @@ function renderStaffList() {
           <option value="staff" ${u.role==="staff"?"selected":""}>Staff</option>
           <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
         </select>
+        ${u.uid !== currentUser.uid ? `<button class="danger-btn remove-member-btn" data-uid="${u.uid}" data-name="${u.name}">Remove</button>` : ""}
       </div>
     </div>
   `).join("");
@@ -519,6 +520,20 @@ function renderStaffList() {
         await updateDoc(doc(db, "users", uid), { role: newRole });
       } catch (err) {
         alert("Update failed: " + err.message);
+      }
+    });
+  });
+
+  // 추방 버튼
+  el.querySelectorAll(".remove-member-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const uid = btn.dataset.uid;
+      const name = btn.dataset.name;
+      if (!confirm(`'${name}'을(를) 목록에서 제거하시겠습니까?\n\n제거해도 해당 사용자의 Google 계정은 유지되며,\n다시 로그인하면 Staff로 재등록됩니다.`)) return;
+      try {
+        await deleteDoc(doc(db, "users", uid));
+      } catch (err) {
+        alert("Remove failed: " + err.message);
       }
     });
   });
